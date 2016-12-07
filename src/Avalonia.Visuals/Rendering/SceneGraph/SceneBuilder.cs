@@ -11,23 +11,22 @@ namespace Avalonia.Rendering.SceneGraph
 {
     public class SceneBuilder : ISceneBuilder
     {
-        public void UpdateAll(Scene scene, LayerDirtyRects dirty)
+        public void UpdateAll(Scene scene)
         {
             Contract.Requires<ArgumentNullException>(scene != null);
             Dispatcher.UIThread.VerifyAccess();
 
-            using (var impl = new DeferredDrawingContextImpl(dirty))
+            using (var impl = new DeferredDrawingContextImpl(scene.Layers))
             using (var context = new DrawingContext(impl))
             {
                 Update(context, scene, (VisualNode)scene.Root, scene.Root.Visual.Bounds, true);
             }
         }
 
-        public bool Update(Scene scene, IVisual visual, LayerDirtyRects dirty)
+        public bool Update(Scene scene, IVisual visual)
         {
             Contract.Requires<ArgumentNullException>(scene != null);
             Contract.Requires<ArgumentNullException>(visual != null);
-            Contract.Requires<ArgumentNullException>(dirty != null);
             Dispatcher.UIThread.VerifyAccess();
 
             var node = (VisualNode)scene.FindNode(visual);
@@ -48,7 +47,7 @@ namespace Avalonia.Rendering.SceneGraph
                         // descendents too.
                         var recurse = node.Visual != visual;
 
-                        using (var impl = new DeferredDrawingContextImpl(dirty))
+                        using (var impl = new DeferredDrawingContextImpl(scene.Layers))
                         using (var context = new DrawingContext(impl))
                         {
                             var clip = scene.Root.Visual.Bounds;
@@ -72,7 +71,7 @@ namespace Avalonia.Rendering.SceneGraph
                         // The control has been removed so remove it from its parent and deindex the
                         // node and its descendents.
                         ((VisualNode)node.Parent)?.RemoveChild(node);
-                        Deindex(scene, node, dirty);
+                        Deindex(scene, node);
                         return true;
                     }
                 }
@@ -83,7 +82,7 @@ namespace Avalonia.Rendering.SceneGraph
                 // node and its descendents.
                 var trim = FindFirstDeadAncestor(scene, node);
                 ((VisualNode)trim.Parent).RemoveChild(trim);
-                Deindex(scene, trim, dirty);
+                Deindex(scene, trim);
                 return true;
             }
 
@@ -124,7 +123,7 @@ namespace Avalonia.Rendering.SceneGraph
             var bounds = new Rect(visual.Bounds.Size);
             var contextImpl = (DeferredDrawingContextImpl)context.PlatformImpl;
 
-            contextImpl.Dirty.Add(node.LayerRoot, node.Bounds);
+            ////contextImpl.Layers.Add(node.LayerRoot, node.Bounds);
 
             if (visual.IsVisible)
             {
@@ -154,14 +153,14 @@ namespace Avalonia.Rendering.SceneGraph
                     node.Opacity = opacity;
                     node.OpacityMask = visual.OpacityMask;
 
-                    if (opacity < 1 && node.LayerRoot != visual)
-                    {
-                        SetLayer(node, node.Visual, contextImpl.Dirty);
-                    }
-                    else if (opacity >= 1 && node.LayerRoot == node.Visual && node.Parent != null)
-                    {
-                        ClearLayer(node, contextImpl.Dirty);
-                    }
+                    ////if (opacity < 1 && node.LayerRoot != visual)
+                    ////{
+                    ////    SetLayer(node, node.Visual, contextImpl.Layers);
+                    ////}
+                    ////else if (opacity >= 1 && node.LayerRoot == node.Visual && node.Parent != null)
+                    ////{
+                    ////    ClearLayer(node, contextImpl.Layers);
+                    ////}
 
                     if (node.ClipToBounds)
                     {
@@ -197,80 +196,80 @@ namespace Avalonia.Rendering.SceneGraph
             return node;
         }
 
-        private static void Deindex(Scene scene, VisualNode node, LayerDirtyRects dirty)
+        private static void Deindex(Scene scene, VisualNode node)
         {
-            scene.Remove(node);
-            node.SubTreeUpdated = true;
+            ////scene.Remove(node);
+            ////node.SubTreeUpdated = true;
 
-            foreach (VisualNode child in node.Children)
-            {
-                var geometry = child as IDrawOperation;
-                var visual = child as VisualNode;
+            ////foreach (VisualNode child in node.Children)
+            ////{
+            ////    var geometry = child as IDrawOperation;
+            ////    var visual = child as VisualNode;
 
-                if (geometry != null)
-                {
-                    dirty.Add(child.LayerRoot, geometry.Bounds);
-                }
+            ////    if (geometry != null)
+            ////    {
+            ////        dirty.Add(child.LayerRoot, geometry.Bounds);
+            ////    }
 
-                if (visual != null)
-                {
-                    Deindex(scene, visual, dirty);
-                }
-            }
+            ////    if (visual != null)
+            ////    {
+            ////        Deindex(scene, visual, dirty);
+            ////    }
+            ////}
         }
 
-        private static void AddSubtreeBounds(VisualNode node, LayerDirtyRects dirty)
+        private static void AddSubtreeBounds(VisualNode node)
         {
-            dirty.Add(node.LayerRoot, node.Bounds);
+            ////dirty.Add(node.LayerRoot, node.Bounds);
 
-            foreach (VisualNode child in node.Children)
-            {
-                if (child.LayerRoot == node.LayerRoot)
-                {
-                    AddSubtreeBounds(child, dirty);
-                }
-            }
+            ////foreach (VisualNode child in node.Children)
+            ////{
+            ////    if (child.LayerRoot == node.LayerRoot)
+            ////    {
+            ////        AddSubtreeBounds(child, dirty);
+            ////    }
+            ////}
         }
 
-        private static void ClearLayer(VisualNode node, LayerDirtyRects dirty)
+        private static void ClearLayer(VisualNode node)
         {
-            var parent = (VisualNode)node.Parent;
-            var newLayerRoot = parent.LayerRoot;
-            var existingDirtyRects = dirty[node.LayerRoot];
+            ////var parent = (VisualNode)node.Parent;
+            ////var newLayerRoot = parent.LayerRoot;
+            ////var existingDirtyRects = dirty[node.LayerRoot];
 
-            existingDirtyRects.Coalesce();
+            ////existingDirtyRects.Coalesce();
 
-            foreach (var r in existingDirtyRects)
-            {
-                dirty.Add(newLayerRoot, r);
-            }
+            ////foreach (var r in existingDirtyRects)
+            ////{
+            ////    dirty.Add(newLayerRoot, r);
+            ////}
 
-            dirty.Remove(node.LayerRoot);
+            ////dirty.Remove(node.LayerRoot);
 
-            SetLayer(node, newLayerRoot, dirty);
+            ////SetLayer(node, newLayerRoot, dirty);
         }
 
-        private static void SetLayer(VisualNode node, IVisual layerRoot, LayerDirtyRects dirty)
+        private static void SetLayer(VisualNode node, IVisual layerRoot)
         {
-            if (node.LayerRoot == layerRoot)
-            {
-                throw new AvaloniaInternalException("Called SetLayer with unchanged LayerRoot.");
-            }
+            ////if (node.LayerRoot == layerRoot)
+            ////{
+            ////    throw new AvaloniaInternalException("Called SetLayer with unchanged LayerRoot.");
+            ////}
 
-            var oldLayerRoot = node.LayerRoot;
+            ////var oldLayerRoot = node.LayerRoot;
 
-            node.LayerRoot = layerRoot;
-            dirty.Add(oldLayerRoot, node.Bounds);
-            dirty.Add(layerRoot, node.Bounds);
+            ////node.LayerRoot = layerRoot;
+            ////dirty.Add(oldLayerRoot, node.Bounds);
+            ////dirty.Add(layerRoot, node.Bounds);
 
-            foreach (VisualNode child in node.Children)
-            {
-                // If the child is not the start of a new layer, recurse.
-                if (child.LayerRoot != child.Visual)
-                {
-                    SetLayer(child, layerRoot, dirty);
-                }
-            }
+            ////foreach (VisualNode child in node.Children)
+            ////{
+            ////    // If the child is not the start of a new layer, recurse.
+            ////    if (child.LayerRoot != child.Visual)
+            ////    {
+            ////        SetLayer(child, layerRoot, dirty);
+            ////    }
+            ////}
         }
     }
 }

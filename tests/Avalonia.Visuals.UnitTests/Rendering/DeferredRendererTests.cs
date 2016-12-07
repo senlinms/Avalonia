@@ -50,7 +50,7 @@ namespace Avalonia.Visuals.UnitTests.Rendering
 
             RunFrame(loop);
 
-            sceneBuilder.Verify(x => x.UpdateAll(It.IsAny<Scene>(), It.IsAny<LayerDirtyRects>()));
+            sceneBuilder.Verify(x => x.UpdateAll(It.IsAny<Scene>()));
         }
 
         [Fact]
@@ -69,8 +69,8 @@ namespace Avalonia.Visuals.UnitTests.Rendering
             IgnoreFirstFrame(loop, sceneBuilder);
             RunFrame(loop);
 
-            sceneBuilder.Verify(x => x.UpdateAll(It.IsAny<Scene>(), It.IsAny<LayerDirtyRects>()), Times.Never);
-            sceneBuilder.Verify(x => x.Update(It.IsAny<Scene>(), It.IsAny<Visual>(), It.IsAny<LayerDirtyRects>()), Times.Never);
+            sceneBuilder.Verify(x => x.UpdateAll(It.IsAny<Scene>()), Times.Never);
+            sceneBuilder.Verify(x => x.Update(It.IsAny<Scene>(), It.IsAny<Visual>()), Times.Never);
         }
 
         [Fact]
@@ -93,8 +93,8 @@ namespace Avalonia.Visuals.UnitTests.Rendering
             target.AddDirty(control2);
             RunFrame(loop);
 
-            sceneBuilder.Verify(x => x.Update(It.IsAny<Scene>(), control1, It.IsAny<LayerDirtyRects>()));
-            sceneBuilder.Verify(x => x.Update(It.IsAny<Scene>(), control2, It.IsAny<LayerDirtyRects>()));
+            sceneBuilder.Verify(x => x.Update(It.IsAny<Scene>(), control1));
+            sceneBuilder.Verify(x => x.Update(It.IsAny<Scene>(), control2));
         }
 
         [Fact]
@@ -106,12 +106,12 @@ namespace Avalonia.Visuals.UnitTests.Rendering
             var dispatcher = new ImmediateDispatcher();
 
             var sceneBuilder = new Mock<ISceneBuilder>();
-            sceneBuilder.Setup(x => x.UpdateAll(It.IsAny<Scene>(), It.IsAny<LayerDirtyRects>()))
-                .Callback<Scene, LayerDirtyRects>((scene, dirty) =>
+            sceneBuilder.Setup(x => x.UpdateAll(It.IsAny<Scene>()))
+                .Callback<Scene>(scene =>
                 {
-                    var rects = new DirtyRects();
-                    rects.Add(new Rect(root.ClientSize));
-                    dirty.Add(root, rects);
+                    ////var rects = new DirtyRects();
+                    ////rects.Add(new Rect(root.ClientSize));
+                    ////dirty.Add(root, rects);
                 });
 
             var layers = new Mock<IRenderLayerFactory>();
